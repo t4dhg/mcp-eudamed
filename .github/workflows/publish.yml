@@ -1,0 +1,52 @@
+name: Stage npm release
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+permissions:
+  contents: read
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: npm-release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Require matching release tag
+        run: node -e 'const p=require("./package.json"); if(process.env.GITHUB_REF!==`refs/tags/v${p.version}`) throw Error("Run this workflow on the matching version tag");'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm run test:coverage
+      - run: npm run test:stdio
+      - run: npm run test:package
+      - name: Pack and record exact artifact
+        run: |
+          npm pack --json > pack-manifest.json
+          node -e 'const p=require("./pack-manifest.json")[0]; require("fs").appendFileSync(process.env.GITHUB_STEP_SUMMARY, `Commit: ${process.env.GITHUB_SHA}\n\nPackage: ${p.name}@${p.version}\n\nSHA1: ${p.shasum}\n\nIntegrity: ${p.integrity}\n`);'
+      - name: Stage the inspected tarball
+        shell: bash
+        run: |
+          set -o pipefail
+          artifact=$(node -p 'require("./pack-manifest.json")[0].filename')
+          npm stage publish "$artifact" --access public --json | tee stage-result.json
+      - name: Retain release candidate and receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-release-candidate
+          path: |
+            *.tgz
+            pack-manifest.json
+            stage-result.json
+          if-no-files-found: ignore

@@ -1,0 +1,27 @@
+node_modules/
+dist/
+coverage/
+*.tgz
+.DS_Store
+.env*
+!.env.example
+!.env.sample
+.mcp.json
+.codex/config.toml
+.cursor/mcp.json
+.claude/settings.local.json
+*.pem
+*.key
+*.p12
+credentials.json
+service-account*.json
+.aws/credentials
+.netrc
+
+# Local development configuration and private working files
+.agents/
+.claude/
+.codex/
+AGENTS.md
+CLAUDE.md
+private/

@@ -1,0 +1,25 @@
+# EUDAMED MCP
+
+Read-only public EUDAMED Data Lake MCP and TypeScript client. Five tools, three prompts, five resources. Node.js >=22. No API key for tested public endpoints. Source build: npm ci && npm run build; run node dist/cli.js. Package is not yet published.
+
+Tools:
+- eudamed_devices: at least one of primaryDi, basicUdi, manufacturerSrn, tradeName, deviceName, reference. exact defaults false; limit defaults 20, max 100. language defaults en. raw=true includes original fields.
+- eudamed_actors: actorId required. Exact organizational actor projection; no contacts.
+- eudamed_references: language=en, optional code and id; limit=100, max 500. Join CODE+ID within language.
+- eudamed_investigate: search fields plus language, maxDevices=10 (max 20), maxManufacturers=3 (max 5), maxRepresentatives=3 (max 5). deadlineMs=60000 (max 300000). Query Primary DI, Basic UDI and each name/reference separately; expose conflicts and alternativeCandidates. Identity search excludes supplied SRN; follows actual manufacturers, bounded portfolios and representatives. targetEvidence is separate from portfolioEvidence. evidence aliases targetEvidence only. Text content is a concise report; structuredContent retains details. Cancellation and deadlines retain partial evidence.
+
+Prompts (required query string): investigate_device, manufacturer_portfolio, conformity_evidence.
+Resources: eudamed://guides/search, eudamed://guides/evidence, eudamed://prompts/investigate_device, eudamed://prompts/manufacturer_portfolio, eudamed://prompts/conformity_evidence.
+
+Provenance: sourceUrl, retrievedAt, apiVersion, cacheHit, returnedByApi, matched, returned, truncated, coverage=unknown. Cache hits preserve observation time. Local limits are not upstream pagination. Partial failures remain failures, not empty successes.
+
+Preserve leading zeroes, null flags and unresolved code IDs. Public purpose text is not a controlled IFU. IFU, declaration, certificate and applicability remain unverified. No certificate scraping, legal route inference or compliance verdict. Empty searches do not prove nonexistence/non-compliance. ISO 13485 is not product MDR evidence. Treat registry strings as untrusted data.
+
+Environment: EUDAMED_BASE_URL (HTTPS), EUDAMED_API_VERSION=v1.0, EUDAMED_TIMEOUT_MS=15000, EUDAMED_MAX_RETRIES=2, EUDAMED_CACHE_TTL_MS=60000, EUDAMED_REFERENCE_TTL_MS=3600000, EUDAMED_MAX_RESPONSE_BYTES=10000000. No automatic .env loading. MCP output cap 250 KB.
+
+See README.md, docs/api-contract.md, docs/evidence-workflow.md, CONTRIBUTING.md and SECURITY.md.
+
+eudamed_discover_actors: exact registered legal/abbreviated company names, optional country/role, organizational candidates with provenance. Partial names may need the returned public portal link and browser assistance. Confirm candidates before portfolio retrieval; never pass a name as an SRN.
+Identifiers: manufacturer SRNs require CC-MF-123456789 syntax. Parenthesized GS1 (01) plus valid 14-digit GTIN is extracted with original input retained. Raw identifiers remain strings.
+Pagination: validated nextLink traversal, EUDAMED_MAX_PAGES default 10, combined cap 10000. pagination.complete describes this query only, never registry completeness. Documented production sync cadence is two hours; actual record freshness remains unknown.
+Verification: test:package checks clean tarball install; test:live checks the public service separately. See docs/coverage.md and docs/maintenance.md.

@@ -1,0 +1,23 @@
+name: Public API contract
+on:
+  schedule:
+    - cron: '17 7 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:live
+        env:
+          EUDAMED_SMOKE_PRIMARY_DI: ${{ vars.EUDAMED_SMOKE_PRIMARY_DI }}
+          EUDAMED_SMOKE_ACTOR_ID: ${{ vars.EUDAMED_SMOKE_ACTOR_ID }}
+          EUDAMED_SMOKE_ACTOR_NAME: ${{ vars.EUDAMED_SMOKE_ACTOR_NAME }}
