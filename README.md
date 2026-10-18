@@ -1,10 +1,20 @@
 # EUDAMED MCP
 
-**From a device name to traceable public evidence.**
+**Search European medical-device records from your AI assistant.**
+
+[![npm version](https://img.shields.io/npm/v/%40t4dhg%2Fmcp-eudamed)](https://www.npmjs.com/package/@t4dhg/mcp-eudamed)
+[![CI](https://github.com/t4dhg/mcp-eudamed/actions/workflows/ci.yml/badge.svg)](https://github.com/t4dhg/mcp-eudamed/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+**Independent, unofficial integration · Read-only access · No API key required for the public endpoints tested**
 
 A read-only Model Context Protocol server for the European Commission's EUDAMED Public API. Search UDI records, verify economic operators, decode classification and status values, and investigate a device without losing the distinction between a public record and verified conformity evidence.
 
-Five focused tools. Three guided workflows. Five readable resources. No API key required for the public endpoints tested.
+Start with a company name, device name or UDI. Find candidate records, identify the registered manufacturer and build an evidence checklist with source links and explicit gaps.
+
+**5 tools · 3 guided workflows · 5 readable resources**
+
+[Get started](#install-and-connect) · [Example requests](#try-these-requests) · [How evidence works](#understand-the-evidence) · [Official EUDAMED portal](https://ec.europa.eu/tools/eudamed/)
 
 ## What makes it useful
 
@@ -217,3 +227,11 @@ The Data Lake requires an exact registered name in observed name queries. A shor
 `npm run test:package` packs the actual artifact, installs it into a clean temporary project, imports the library and exercises the installed executable over MCP stdio. It requires npm registry access for dependencies.
 
 See [maintenance](docs/maintenance.md) for scheduled contract checks and handling API changes.
+
+## Independence and attribution
+
+EUDAMED MCP is an independent, unofficial open-source project. It is **not developed, commissioned, endorsed or supported by the European Commission**, and is not affiliated with the European Commission.
+
+EUDAMED is the European Commission’s European Database on Medical Devices. References to EUDAMED identify the public service this project integrates with; they do not imply official status or endorsement. For official information, visit the [European Commission’s EUDAMED website](https://health.ec.europa.eu/medical-devices-eudamed/overview_en).
+
+Public database records do not independently establish a device’s conformity. This software provides research assistance, not a regulatory determination.
