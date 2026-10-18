@@ -19,26 +19,20 @@ This is an independent integration, not an official European Commission product.
 
 ## Install and connect
 
-Requires Node.js 22 or later. This source version is **not yet published**; build locally:
-
-```bash
-cd mcp-eudamed
-npm ci
-npm run build
-```
-
-Add the following entry to an MCP client's server configuration, replacing the path with your absolute checkout path:
+Requires Node.js 22 or later. Add this entry to your MCP client's server configuration:
 
 ```json
 {
   "mcpServers": {
     "eudamed": {
-      "command": "node",
-      "args": ["/absolute/path/mcp-eudamed/dist/cli.js"]
+      "command": "npx",
+      "args": ["-y", "@t4dhg/mcp-eudamed@0.1.0"]
     }
   }
 }
 ```
+
+To build from source, run `npm ci && npm run build` in the checkout and configure `node` with the absolute path to `dist/cli.js`.
 
 The server uses stdio. Standard output is reserved for MCP messages. No credentials or `.env` file are needed. Optional configuration is read from the process environment; `.env` files are not loaded automatically.
 
