@@ -1,3 +1,7 @@
+[![European Commission — EUDAMED](https://raw.githubusercontent.com/t4dhg/mcp-eudamed/main/docs/assets/eudamed-header.svg)](https://ec.europa.eu/tools/eudamed/)
+
+**Independent, unofficial integration.**
+
 # EUDAMED MCP
 
 **Search European medical-device records from your AI assistant.**
@@ -231,6 +235,8 @@ See [maintenance](docs/maintenance.md) for scheduled contract checks and handlin
 ## Independence and attribution
 
 EUDAMED MCP is an independent, unofficial open-source project. It is **not developed, commissioned, endorsed or supported by the European Commission**, and is not affiliated with the European Commission.
+
+The header reproduces the [European Commission logo supplied by the EUDAMED portal](https://ec.europa.eu/tools/eudamed/assets/images/ecl/ec/logo/logo-ec--en.svg), with an adjacent EUDAMED label. The logo remains the property of its respective owner and is not covered by this project’s MIT license.
 
 EUDAMED is the European Commission’s European Database on Medical Devices. References to EUDAMED identify the public service this project integrates with; they do not imply official status or endorsement. For official information, visit the [European Commission’s EUDAMED website](https://health.ec.europa.eu/medical-devices-eudamed/overview_en).
 
