@@ -1,0 +1,42 @@
+name: Publish to MCP Registry
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Verify released package and registry metadata
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          import { execFileSync } from 'node:child_process';
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          const server = JSON.parse(fs.readFileSync('server.json', 'utf8'));
+          const live = JSON.parse(execFileSync('npm', ['view', `${pkg.name}@${pkg.version}`, '--json'], { encoding: 'utf8' }));
+          assert.equal(live.version, pkg.version);
+          assert.equal(live.mcpName, server.name);
+          assert.equal(server.version, pkg.version);
+          assert.equal(server.packages[0].identifier, pkg.name);
+          assert.equal(server.packages[0].version, pkg.version);
+          JS
+      - name: Install registry publisher
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz -o publisher.tar.gz
+          tar -xzf publisher.tar.gz mcp-publisher
+      - name: Authenticate with GitHub Actions
+        run: ./mcp-publisher login github-oidc
+      - name: Publish registry metadata
+        run: ./mcp-publisher publish
