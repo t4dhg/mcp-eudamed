@@ -7,8 +7,14 @@
 **Search European medical-device records from your AI assistant.**
 
 [![npm version](https://img.shields.io/npm/v/%40t4dhg%2Fmcp-eudamed)](https://www.npmjs.com/package/@t4dhg/mcp-eudamed)
-[![CI](https://github.com/t4dhg/mcp-eudamed/actions/workflows/ci.yml/badge.svg)](https://github.com/t4dhg/mcp-eudamed/actions/workflows/ci.yml)
+[![npm downloads](https://img.shields.io/npm/dm/%40t4dhg%2Fmcp-eudamed)](https://www.npmjs.com/package/@t4dhg/mcp-eudamed)
+[![TypeScript types included](https://img.shields.io/badge/types-included-3178c6.svg)](https://www.npmjs.com/package/@t4dhg/mcp-eudamed?activeTab=code)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/t4dhg/mcp-eudamed)](https://github.com/t4dhg/mcp-eudamed/stargazers)
+[![CI](https://github.com/t4dhg/mcp-eudamed/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/t4dhg/mcp-eudamed/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/t4dhg/mcp-eudamed/branch/main/graph/badge.svg)](https://codecov.io/gh/t4dhg/mcp-eudamed)
+[![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-brightgreen.svg)](https://nodejs.org/)
+[![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-green.svg)](https://modelcontextprotocol.io/)
 
 **Independent, unofficial integration · Read-only access · No API key required for the public endpoints tested**
 
