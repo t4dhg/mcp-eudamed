@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.1 - 2026-10-18
+
+- Updated npm installation instructions, project presentation and EUDAMED header.
+- Added prominent independent-project disclosure and European Commission attribution.
+- Added package, compatibility and quality badges with CI-backed Codecov reporting.
+- Added manual MCP registry publication using GitHub OIDC.
+
+No runtime behavior changes.
+
 ## 0.1.0 - 2026-10-18
 
 Initial release:

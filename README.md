@@ -46,7 +46,7 @@ Requires Node.js 22 or later. Add this entry to your MCP client's server configu
   "mcpServers": {
     "eudamed": {
       "command": "npx",
-      "args": ["-y", "@t4dhg/mcp-eudamed@0.1.0"]
+      "args": ["-y", "@t4dhg/mcp-eudamed@0.1.1"]
     }
   }
 }

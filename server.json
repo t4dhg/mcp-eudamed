@@ -3,13 +3,13 @@
   "name": "io.github.t4dhg/mcp-eudamed",
   "title": "EUDAMED MCP",
   "description": "Search public EUDAMED devices, verify actors and build traceable evidence checklists.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@t4dhg/mcp-eudamed",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"

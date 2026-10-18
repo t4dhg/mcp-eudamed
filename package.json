@@ -1,6 +1,6 @@
 {
   "name": "@t4dhg/mcp-eudamed",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "mcpName": "io.github.t4dhg/mcp-eudamed",
   "description": "Read-only EUDAMED MCP server: device discovery, economic operators, reference decoding and traceable evidence investigations.",
   "type": "module",
