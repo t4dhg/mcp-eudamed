@@ -1,19 +1,27 @@
 # Contributing
 
-Use Node.js 22 or later and install with `npm ci`. Keep API calls in the adapter, evidence normalization independent of transport, and MCP registrations thin. Inspect real public response shapes before changing schemas. Use synthetic fixtures in tests; never commit contact information, credentials or captured private records.
+Use Node.js 24 for development (`nvm use`) and install with `npm ci`. The published runtime remains Node 22 or later; CI independently installs packed consumers on Node 22, 24 and 26 with strict engines. Keep API calls in the adapter, evidence normalization independent of transport, and MCP registrations thin. Inspect real public response shapes before changing schemas. Use synthetic fixtures in tests; never commit contact information, credentials or captured private records.
 
 Before submitting a change, run:
 
 ```bash
+npm run audit
 npm run lint
 npm run format:check
 npm run typecheck
 npm run test:coverage
+npm run test:package-checker
 npm run test:stdio
 npm run test:package
 ```
 
 Tests should distinguish plausible failures: exact versus substring matches, wrong versus actual manufacturers, missing versus false flags, failed versus empty searches, same-ID reference values in different categories, stale names alongside exact UDIs, separate portfolio evidence, multiple versions, IVDR records, missing operators and cancellation during queued requests, fetches and retries. Transport tests must exercise MCP discovery and calls, not only registration functions.
+
+The build clears obsolete output before compiling. Package checks inspect the mandatory published manifest, reject install lifecycle scripts and test/archive material, audit a strict fresh consumer, import the installed library and exercise the installed CLI without upstream API calls.
+
+Use the actual Zod 4 implementation when changing schemas; compatibility imports such as `zod/v3` retain the old parser. Oversized response collections must reject before visiting records, while preserving the existing 10,000-record and byte/pagination limits.
+
+The minimatch overrides only target ESLint, its config-array helper and typescript-eslint, whose named APIs are compatible with minimatch 11. Remove each override when its parent supports a patched release natively, and verify lint and tests. Never extend it to minimatch 3 default-export consumers.
 
 Live smoke tests are optional and separate from CI. `npm run test:live` verifies references. Add `EUDAMED_SMOKE_PRIMARY_DI` and `EUDAMED_SMOKE_ACTOR_ID` for known public records to exercise all endpoints. Do not pin mutable live classifications as timeless facts.
 

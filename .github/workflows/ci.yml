@@ -3,14 +3,36 @@ on:
   push:
     branches: [main]
   pull_request:
+    branches: [main]
 permissions:
   contents: read
 jobs:
-  verify:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run audit
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm run test:package-checker
+      - run: npm run build
+      - run: npm run check:package -- "$RUNNER_TEMP/package"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-package
+          path: ${{ runner.temp }}/package/*.tgz
+          if-no-files-found: error
+  test:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node: [22, 24, 26]
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -18,12 +40,7 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
-      - run: npm run lint
-      - run: npm run format:check
-      - run: npm run typecheck
       - run: npm run test:coverage
-      - run: npm run test:stdio
-      - run: npm run test:package
       - name: Retain coverage for upload
         if: matrix.node == 24 && github.event_name == 'push'
         uses: actions/upload-artifact@v4
@@ -34,7 +51,7 @@ jobs:
           retention-days: 7
   coverage:
     name: Upload coverage
-    needs: verify
+    needs: test
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
@@ -46,10 +63,32 @@ jobs:
         with:
           name: coverage
           path: coverage
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v7
+      - uses: codecov/codecov-action@v7
         with:
           use_oidc: true
           files: coverage/lcov.info
           disable_search: true
           fail_ci_if_error: true
+  packed-runtime:
+    needs: quality
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [22, 24, 26]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: npm-package
+          path: ${{ runner.temp }}/package
+      - name: Install inspected package with strict engines
+        run: npm install --prefix "$RUNNER_TEMP/consumer" "$RUNNER_TEMP/package/"*.tgz --engine-strict --omit=dev --ignore-scripts --no-audit --no-fund
+      - name: Audit fresh runtime dependencies
+        run: npm audit --prefix "$RUNNER_TEMP/consumer" --omit=dev --audit-level=low
+      - name: Verify installed executable
+        run: node scripts/stdio-smoke.mjs "$RUNNER_TEMP/consumer/node_modules/.bin/mcp-eudamed"
+      - name: Verify installed library import
+        run: node --input-type=module -e 'const m=await import(process.env.RUNNER_TEMP+"/consumer/node_modules/@t4dhg/mcp-eudamed/dist/index.js"); if(typeof m.EudamedClient!=="function") throw Error("Missing library export");'
