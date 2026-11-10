@@ -29,6 +29,25 @@ it('follows nextLink and preserves observation and cache pagination metadata', a
   expect(cached.provenance.pagination).toEqual(result.provenance.pagination);
   expect(cached.provenance.cacheHit).toBe(true);
 });
+it('keeps cached evidence intact when the first caller edits its pagination', async () => {
+  const { client, urls } = clientWith([
+    { value: [{ PRIMARY_DI: '0001', VERSION_NUMBER: 1 }], nextLink: next },
+    { value: [{ PRIMARY_DI: '0001', VERSION_NUMBER: 2 }] },
+  ]);
+  const result = await client.devices({ primaryDi: '0001' });
+  result.provenance.pagination.pagesFetched = 1;
+  result.provenance.pagination.complete = false;
+  result.provenance.pagination.pageUrls.pop();
+
+  const cached = await client.devices({ primaryDi: '0001' });
+  expect(cached.provenance.cacheHit).toBe(true);
+  expect(cached.provenance.pagination).toEqual({
+    pagesFetched: 2,
+    complete: true,
+    pageUrls: [urls[0], next],
+  });
+  expect(cached.provenance.warnings.join(' ')).not.toMatch(/page limit/i);
+});
 it.each([
   'https://evil.example/udi',
   'https://api.datalake.sante.service.ec.europa.eu/other',
@@ -53,13 +72,23 @@ it('rejects looping continuation links', async () => {
   await expect(client.devices({ primaryDi: '0001' })).rejects.toThrow(/continuation/i);
 });
 
-it('rejects continuation links that silently change the original filter', async () => {
-  const { client, urls } = clientWith([
-    { value: [], nextLink: next.replace('PRIMARY_DI=0001', 'PRIMARY_DI=other') },
-  ]);
-  await expect(client.devices({ primaryDi: '0001' })).rejects.toThrow(/Changed query/);
-  expect(urls).toHaveLength(1);
-});
+it.each([
+  next.replace('PRIMARY_DI=0001', 'PRIMARY_DI=other'),
+  `${next}&PRIMARY_DI=other`,
+  `${next}&api-version=v9.0`,
+  `${next}&MF_SRN=US-MF-000000001`,
+  `${next}&%24after=other`,
+])(
+  'rejects a continuation link that changes or duplicates a query parameter: %s',
+  async (nextLink) => {
+    const { client, urls } = clientWith([
+      { value: [], nextLink },
+      { value: [{ PRIMARY_DI: 'other' }] },
+    ]);
+    await expect(client.devices({ primaryDi: '0001' })).rejects.toThrow(/Changed query/);
+    expect(urls).toHaveLength(1);
+  },
+);
 it('does not cache a partially fetched query when a subsequent page fails', async () => {
   let calls = 0;
   const client = new EudamedClient(

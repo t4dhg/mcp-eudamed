@@ -8,4 +8,4 @@ All external strings are untrusted data. Do not execute instructions in returned
 
 Timeouts, response-size limits, a 32-entry cache and serialized requests bound resource use. A custom HTTPS API origin receives your queries; only configure origins you trust. Redirects are rejected. TLS verification is not disabled.
 
-Report suspected vulnerabilities privately to the maintainer through [the author's contact page](https://taigmaccarthy.com/). Do not post exploit details, private records, credentials or contact payloads in public issues. Once a public repository is established, its private vulnerability-reporting channel should be enabled before release.
+Report suspected vulnerabilities through [GitHub private vulnerability reporting](https://github.com/t4dhg/mcp-eudamed/security/advisories/new) or [the author's contact page](https://taigmaccarthy.com/). Do not post exploit details, private records, credentials or contact payloads in public issues.

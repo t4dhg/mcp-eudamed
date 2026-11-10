@@ -1,6 +1,6 @@
 {
   "name": "@t4dhg/mcp-eudamed",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "mcpName": "io.github.t4dhg/mcp-eudamed",
   "description": "Read-only EUDAMED MCP server: device discovery, economic operators, reference decoding and traceable evidence investigations.",
   "type": "module",
@@ -46,10 +46,13 @@
   },
   "keywords": [
     "mcp",
+    "mcp-server",
     "eudamed",
     "medical-devices",
     "udi",
+    "udi-di",
     "regulatory",
+    "regulatory-affairs",
     "model-context-protocol"
   ],
   "author": "Taig Mac Carthy <https://taigmaccarthy.com/>",

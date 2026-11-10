@@ -101,9 +101,17 @@ export class HttpClient {
             link.hash
           )
             throw new EudamedError('SCHEMA', 'Unsafe continuation link');
-          for (const [name, value] of url.searchParams)
-            if (link.searchParams.get(name) !== value)
+          // A Data Lake continuation adds one cursor to the original query.
+          if (
+            link.searchParams.size !== url.searchParams.size + 1 ||
+            !link.searchParams.get('$after')
+          )
+            throw new EudamedError('SCHEMA', 'Changed query in continuation link');
+          for (const [name, value] of url.searchParams) {
+            const values = link.searchParams.getAll(name);
+            if (values.length !== 1 || values[0] !== value)
               throw new EudamedError('SCHEMA', 'Changed query in continuation link');
+          }
           next = link.toString();
           if (pageUrls.includes(next))
             throw new EudamedError('SCHEMA', 'Repeated continuation link');
@@ -115,7 +123,7 @@ export class HttpClient {
       if (this.cache.size >= 32) this.cache.delete(this.cache.keys().next().value!);
       this.cache.set(key, {
         records: structuredClone(records),
-        pagination,
+        pagination: structuredClone(pagination),
         retrievedAt,
         expires: this.now() + ttl,
       });

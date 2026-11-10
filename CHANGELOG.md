@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1] - 2026-11-09
+
+### Fixed
+
+- Reject continuation links that add, change or repeat query parameters so a later page cannot silently change the scope of the original evidence query.
+- Isolate pagination metadata returned to callers from the cached copy.
+
 ## [0.2.0] - 2026-11-04
 
 ### Changed

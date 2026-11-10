@@ -8,6 +8,8 @@
 
 [![npm version](https://img.shields.io/npm/v/%40t4dhg%2Fmcp-eudamed)](https://www.npmjs.com/package/@t4dhg/mcp-eudamed)
 [![npm downloads](https://img.shields.io/npm/dm/%40t4dhg%2Fmcp-eudamed)](https://www.npmjs.com/package/@t4dhg/mcp-eudamed)
+[![Official MCP Registry](https://img.shields.io/badge/MCP_Registry-listed-2d6a4f)](https://registry.modelcontextprotocol.io/v0.1/servers/io.github.t4dhg%2Fmcp-eudamed/versions/latest)
+[![t4dhg/mcp-eudamed MCP server](https://glama.ai/mcp/servers/t4dhg/mcp-eudamed/badges/score.svg)](https://glama.ai/mcp/servers/t4dhg/mcp-eudamed)
 [![TypeScript types included](https://img.shields.io/badge/types-included-3178c6.svg)](https://www.npmjs.com/package/@t4dhg/mcp-eudamed?activeTab=code)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/t4dhg/mcp-eudamed)](https://github.com/t4dhg/mcp-eudamed/stargazers)
@@ -46,7 +48,7 @@ Requires Node.js 22 or later. Add this entry to your MCP client's server configu
   "mcpServers": {
     "eudamed": {
       "command": "npx",
-      "args": ["-y", "@t4dhg/mcp-eudamed@0.1.1"]
+      "args": ["-y", "@t4dhg/mcp-eudamed"]
     }
   }
 }
@@ -55,6 +57,8 @@ Requires Node.js 22 or later. Add this entry to your MCP client's server configu
 To build from source, run `npm ci && npm run build` in the checkout and configure `node` with the absolute path to `dist/cli.js`.
 
 The server uses stdio. Standard output is reserved for MCP messages. No credentials or `.env` file are needed. Optional configuration is read from the process environment; `.env` files are not loaded automatically.
+
+For reproducible installs, append `@<version>` to the package name using a release from [npm](https://www.npmjs.com/package/@t4dhg/mcp-eudamed?activeTab=versions).
 
 For programmatic use, import `EudamedClient`, `investigate` or `createServer` from the package. Importing the library does not start a transport:
 
@@ -198,10 +202,10 @@ npm run format:check
 npm run typecheck
 npm run test:coverage
 npm run test:stdio
-npm pack --dry-run
+npm run test:package
 ```
 
-Unit and MCP protocol tests are deterministic and use synthetic data. Built stdio checks verify transport initialization, discovery, resources and validation without live network access. Coverage gates include the adapter, investigation and MCP registrations.
+Unit and MCP protocol tests are deterministic and use synthetic data. Built stdio checks verify transport initialization, discovery, resources and validation without live network access. [CI](https://github.com/t4dhg/mcp-eudamed/actions/workflows/ci.yml) also checks the npm tarball, installs it with strict engine checks, audits its runtime dependencies and exercises the installed command and library on Node.js 22, 24 and 26. Coverage gates include the adapter, investigation and MCP registrations.
 
 Live checks are opt-in:
 

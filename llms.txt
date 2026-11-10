@@ -1,6 +1,10 @@
 # EUDAMED MCP
 
-Read-only public EUDAMED Data Lake MCP and TypeScript client. Five tools, three prompts, five resources. Node.js >=22. No API key for tested public endpoints. Source build: npm ci && npm run build; run node dist/cli.js. Package is not yet published.
+Read-only public EUDAMED Data Lake MCP and TypeScript client. Five tools, three prompts, five resources. Node.js >=22. No API key for tested public endpoints. Install for stdio with npx -y @t4dhg/mcp-eudamed. Source build: npm ci && npm run build; run node dist/cli.js.
+
+npm: https://www.npmjs.com/package/@t4dhg/mcp-eudamed
+MCP Registry: https://registry.modelcontextprotocol.io/v0.1/servers/io.github.t4dhg%2Fmcp-eudamed/versions/latest
+Glama: https://glama.ai/mcp/servers/t4dhg/mcp-eudamed
 
 Tools:
 - eudamed_devices: at least one of primaryDi, basicUdi, manufacturerSrn, tradeName, deviceName, reference. exact defaults false; limit defaults 20, max 100. language defaults en. raw=true includes original fields.
