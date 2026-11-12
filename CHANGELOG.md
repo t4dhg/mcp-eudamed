@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.3.0] - 2026-11-12
+
+### Added
+
+- Read-only `eudamed_status` with uncached historical device and actor controls, per-probe evidence and conservative outage classification. Investigations run it when every attempted device query returns HTTP 404.
+- Device filters for risk class, applicable legislation, EMDN nomenclature code and special device type. Risk class accepts numeric IDs or English labels resolved through CODE-scoped reference data.
+
+### Changed
+
+- `provenance.truncated` now includes incomplete upstream pagination as well as local output caps. Consumers that need the former local-only meaning must use `provenance.locallyTruncated`.
+- Explicitly document exact trade-name matching, manual portal fallback and the distinction between category candidates and verified certificate holders.
+
+### Fixed
+
+- Preserve HTTP status, query URL, retrieval time and bounded response-body evidence instead of reporting only a status code. Incomplete or truncated bodies are marked; body-read failures retain received HTTP evidence.
+- Guard CODE-specific decoded labels against identical IDs in different reference categories, including Class III and Antarctica.
+
 ## [0.2.1] - 2026-11-09
 
 ### Fixed
