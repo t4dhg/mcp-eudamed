@@ -5,6 +5,13 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # Keep declarations aligned with the minimum supported Node runtime.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+      # Revisit when typescript-eslint supports TypeScript 7 (currently <6.1).
+      - dependency-name: typescript
+        versions: ['>=7.0.0 <8.0.0']
   - package-ecosystem: github-actions
     directory: /
     schedule:

@@ -15,8 +15,8 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           registry-url: https://registry.npmjs.org
@@ -47,7 +47,7 @@ jobs:
           npm stage publish "$RUNNER_TEMP/package/"*.tgz --access public --json | tee "$RUNNER_TEMP/package/stage-result.json"
       - name: Retain release candidate and receipts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: npm-release-candidate
           path: ${{ runner.temp }}/package/

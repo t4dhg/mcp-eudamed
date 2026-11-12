@@ -1,6 +1,6 @@
 # Contributing
 
-Use Node.js 24 for development (`nvm use`) and install with `npm ci`. The published runtime remains Node 22 or later; CI independently installs packed consumers on Node 22, 24 and 26 with strict engines. Keep API calls in the adapter, evidence normalization independent of transport, and MCP registrations thin. Inspect real public response shapes before changing schemas. Use synthetic fixtures in tests; never commit contact information, credentials or captured private records.
+Use Node.js 24 for development (`nvm use`) and install with `npm ci`. The published runtime remains Node 22 or later; CI independently installs packed consumers on Node 22, 24 and 26 with strict engines. Keep `@types/node` on major 22 to match the minimum supported runtime, even when developing on newer Node releases. TypeScript 7 updates are deferred until typescript-eslint declares compatible peer support; revisit the scoped Dependabot exclusion when that support lands. Do not bypass peer checks with `--force` or `--legacy-peer-deps`. Keep API calls in the adapter, evidence normalization independent of transport, and MCP registrations thin. Inspect real public response shapes before changing schemas. Use synthetic fixtures in tests; never commit contact information, credentials or captured private records.
 
 Before submitting a change, run:
 
