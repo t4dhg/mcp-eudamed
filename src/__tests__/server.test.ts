@@ -39,11 +39,12 @@ async function connect(customFetch?: typeof fetch) {
   return client;
 }
 describe('MCP protocol', () => {
-  it('discovers five read-only tools and executes each over the protocol', async () => {
+  it('discovers six read-only tools and executes each over the protocol', async () => {
     const client = await connect();
     const tools = await client.listTools();
     expect(tools.tools.map((t) => t.name)).toEqual([
       'eudamed_devices',
+      'eudamed_status',
       'eudamed_actors',
       'eudamed_discover_actors',
       'eudamed_references',
@@ -52,6 +53,7 @@ describe('MCP protocol', () => {
     expect(tools.tools.every((t) => t.annotations?.readOnlyHint)).toBe(true);
     for (const [name, args] of [
       ['eudamed_devices', { tradeName: 'Example' }],
+      ['eudamed_status', {}],
       ['eudamed_actors', { actorId: 'US-MF-000000001' }],
       ['eudamed_discover_actors', { name: 'Example' }],
       ['eudamed_references', {}],
@@ -97,7 +99,7 @@ describe('MCP output boundaries', () => {
     });
     expect(result.isError).not.toBe(true);
     expect(result.structuredContent).toMatchObject({
-      referenceError: 'EUDAMED returned HTTP 400',
+      referenceError: expect.stringContaining('EUDAMED returned HTTP 400'),
       records: [expect.objectContaining({ raw: { PRIMARY_DI: '0001', EXTRA: 'retained' } })],
     });
   });
@@ -168,5 +170,36 @@ describe('investigation report over MCP', () => {
     await call;
     await new Promise((r) => setTimeout(r, 10));
     expect(aborted).toBe(true);
+  });
+});
+
+it('returns CODE-scoped decoded labels alongside raw IDs over MCP', async () => {
+  const client = await connect(
+    async (url) =>
+      new Response(
+        JSON.stringify({
+          value: String(url).includes('/reference')
+            ? [
+                { CODE: 'RISK_CLASS_ID', ID: -10, LANGUAGE: 'en', VALUE: 'Class III' },
+                { CODE: 'PLACED_ON_THE_MARKET_ID', ID: -10, LANGUAGE: 'en', VALUE: 'Antarctica' },
+              ]
+            : [{ PRIMARY_DI: '0001', RISK_CLASS_ID: -10, PLACED_ON_THE_MARKET_ID: -10 }],
+        }),
+      ),
+  );
+  const result = await client.callTool({
+    name: 'eudamed_devices',
+    arguments: { riskClass: 'Class III' },
+  });
+  expect(result.isError).not.toBe(true);
+  expect(result.structuredContent).toMatchObject({
+    records: [
+      {
+        decoded: {
+          RISK_CLASS_ID: { id: -10, label: 'Class III' },
+          PLACED_ON_THE_MARKET_ID: { id: -10, label: 'Antarctica' },
+        },
+      },
+    ],
   });
 });

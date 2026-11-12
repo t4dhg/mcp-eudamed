@@ -24,7 +24,7 @@ A read-only Model Context Protocol server for the European Commission's EUDAMED 
 
 Start with a company name, device name or UDI. Find candidate records, identify the registered manufacturer and build an evidence checklist with source links and explicit gaps.
 
-**5 tools · 3 guided workflows · 5 readable resources**
+**6 tools · 3 guided workflows · 5 readable resources**
 
 [Get started](#install-and-connect) · [Example requests](#try-these-requests) · [How evidence works](#understand-the-evidence) · [Official EUDAMED portal](https://ec.europa.eu/tools/eudamed/)
 
@@ -34,7 +34,7 @@ Start with a company name, device name or UDI. Find candidate records, identify 
 - **Find the actual manufacturer.** A supplied SRN can belong to another company in the same group. Investigation searches device identity independently and follows the manufacturer SRN in the returned record.
 - **Evidence you can trace.** Results carry the exact source query, original retrieval timestamp, API version, cache status and local limits.
 - **Honest gaps.** Missing flags remain unknown. Failed requests remain failures. IFUs, declarations and certificates remain unverified until obtained separately.
-- **Small tool surface.** Five tools expose the three verified API endpoints and a bounded investigation workflow. Prompts are also resources, so clients can read the procedures without invoking a slash command.
+- **Small tool surface.** Six tools expose the three verified API endpoints and a bounded investigation workflow. Prompts are also resources, so clients can read the procedures without invoking a slash command.
 - **Conservative by default.** Serialized requests, bounded retries, timeouts, response-size limits, short-lived caching and organizational-only actor data.
 
 This is an independent integration, not an official European Commission product. Public registration does not independently establish product conformity. The server does not retrieve IFUs or certificates and does not issue a compliant/non-compliant verdict.
@@ -93,6 +93,7 @@ const dossier = await investigate(api, {
 | `eudamed_actors`          | Verify one exact SRN with organizational fields only                            | `actorId`                                                                                                                                        |
 | `eudamed_discover_actors` | Discover exact legal/abbreviated company-name candidates, with portal fallback  | `name`, optional `country`, `role`, `limit`                                                                                                      |
 | `eudamed_references`      | Retrieve code translations, optionally narrowed locally                         | `language`, `code`, `id`, `limit`                                                                                                                |
+| `eudamed_status`          | Check device and actor dataset availability using historical controls           | No arguments; uncached read-only probes                                                                                                          |
 | `eudamed_investigate`     | Resolve candidate devices and operators, decode fields and expose evidence gaps | Device search fields; `language`, `maxDevices`, `maxManufacturers`, `maxRepresentatives`, `deadlineMs`                                           |
 
 All tools advertise read-only, non-destructive, idempotent, open-world annotations. Tool errors return `isError: true`. Search tools provide JSON text and equivalent `structuredContent`. Investigation provides a concise report in text content and complete evidence in `structuredContent` (also including the report).
@@ -158,21 +159,29 @@ Readable resources:
 - `eudamed://prompts/manufacturer_portfolio`
 - `eudamed://prompts/conformity_evidence`
 
+### Dataset health and category discovery
+
+Use `eudamed_status` to check current device/actor availability with uncached historical positive controls. A device 404 `Data not found` while its actor succeeds is reported as a probable device-dataset outage, not an empty search. Other inconclusive controls remain inconclusive. Investigations run this check when all attempted device queries return 404. HTTP errors preserve query URL, status, retrieval time and bounded untrusted response text. For manual checks use https://ec.europa.eu/tools/eudamed/#/screen/search-device; the server does not access that portal API.
+
+`eudamed_devices` additionally accepts `riskClass` (numeric ID, numeric string or exact English label such as `Class III`), `applicableLegislationId`, `nomenclatureCode` (EMDN, e.g. `Z12040192`) and `specialDeviceTypeId`. Use `eudamed_references` with the relevant CODE to obtain legislation and software-type IDs. These filters are documented in the official OpenAPI definition; live successful category queries could not be verified during the 2026-11-12 device-dataset incident. Class/category matches are candidates for further investigation, not proof of certificate ownership. Names match exactly; no substring or automatic legal-name normalization is provided.
+
+The client follows bounded upstream continuation links. `provenance.truncated` is true for either an output cap or incomplete paging; `locallyTruncated` identifies only the output cap. Results retain decoded labels alongside IDs, with CODE-specific joins and unresolved values preserved. Coverage and current certificate scope remain unverified.
+
 ## Understand the evidence
 
-| Output                                   | Meaning                                                                                |
-| ---------------------------------------- | -------------------------------------------------------------------------------------- |
-| `sourceUrl`, `retrievedAt`, `apiVersion` | Query and observation time; cached observations retain their original time             |
-| `returnedByApi`                          | Records in this response, not a total registry count                                   |
-| `matched`                                | Records left after local matching                                                      |
-| `returned`, `truncated`                  | Local output count and whether this response was locally capped                        |
-| `coverage: "unknown"`                    | Registry coverage and individual-record freshness are not established                  |
-| `decoded.FIELD`                          | Raw numeric ID, translated label and resolved/unresolved status                        |
-| `pagination`                             | Pages fetched, source page URLs and whether the query exhausted its continuation links |
-| `flags`                                  | `true`, `false` or `null` for unknown/unrecognized values                              |
-| `intendedPurpose.status`                 | `public-record` or `missing`; neither verifies a controlled current IFU                |
-| `documents`                              | Explicitly unverified IFU, declaration and certificate evidence; no fabricated URLs    |
-| Investigation `failures`                 | Failed steps, distinct from successful empty searches                                  |
+| Output                                      | Meaning                                                                                |
+| ------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `sourceUrl`, `retrievedAt`, `apiVersion`    | Query and observation time; cached observations retain their original time             |
+| `returnedByApi`                             | Records in this response, not a total registry count                                   |
+| `matched`                                   | Records left after local matching                                                      |
+| `returned`, `truncated`, `locallyTruncated` | Output count, any truncation (paging or output), and local output truncation           |
+| `coverage: "unknown"`                       | Registry coverage and individual-record freshness are not established                  |
+| `decoded.FIELD`                             | Raw numeric ID, translated label and resolved/unresolved status                        |
+| `pagination`                                | Pages fetched, source page URLs and whether the query exhausted its continuation links |
+| `flags`                                     | `true`, `false` or `null` for unknown/unrecognized values                              |
+| `intendedPurpose.status`                    | `public-record` or `missing`; neither verifies a controlled current IFU                |
+| `documents`                                 | Explicitly unverified IFU, declaration and certificate evidence; no fabricated URLs    |
+| Investigation `failures`                    | Failed steps, distinct from successful empty searches                                  |
 
 An empty search is evidence about that query. It is not proof that the device does not exist or is non-compliant. An ISO 13485 certificate addresses a quality-management system; it does not replace product-specific documentation. See [the evidence workflow](docs/evidence-workflow.md).
 

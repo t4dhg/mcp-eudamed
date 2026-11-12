@@ -1,6 +1,6 @@
 # EUDAMED MCP
 
-Read-only public EUDAMED Data Lake MCP and TypeScript client. Five tools, three prompts, five resources. Node.js >=22. No API key for tested public endpoints. Install for stdio with npx -y @t4dhg/mcp-eudamed. Source build: npm ci && npm run build; run node dist/cli.js.
+Read-only public EUDAMED Data Lake MCP and TypeScript client. Six tools, three prompts, five resources. Node.js >=22. No API key for tested public endpoints. Install for stdio with npx -y @t4dhg/mcp-eudamed. Source build: npm ci && npm run build; run node dist/cli.js.
 
 npm: https://www.npmjs.com/package/@t4dhg/mcp-eudamed
 MCP Registry: https://registry.modelcontextprotocol.io/v0.1/servers/io.github.t4dhg%2Fmcp-eudamed/versions/latest
@@ -27,3 +27,11 @@ eudamed_discover_actors: exact registered legal/abbreviated company names, optio
 Identifiers: manufacturer SRNs require CC-MF-123456789 syntax. Parenthesized GS1 (01) plus valid 14-digit GTIN is extracted with original input retained. Raw identifiers remain strings.
 Pagination: validated nextLink traversal, EUDAMED_MAX_PAGES default 10, combined cap 10000. pagination.complete describes this query only, never registry completeness. Documented production sync cadence is two hours; actual record freshness remains unknown.
 Verification: test:package checks clean tarball install; test:live checks the public service separately. See docs/coverage.md and docs/maintenance.md.
+
+### Dataset health and category discovery
+
+Use `eudamed_status` to check current device/actor availability with uncached historical positive controls. A device 404 `Data not found` while its actor succeeds is reported as a probable device-dataset outage, not an empty search. Other inconclusive controls remain inconclusive. Investigations run this check when all attempted device queries return 404. HTTP errors preserve query URL, status, retrieval time and bounded untrusted response text. For manual checks use https://ec.europa.eu/tools/eudamed/#/screen/search-device; the server does not access that portal API.
+
+`eudamed_devices` additionally accepts `riskClass` (numeric ID, numeric string or exact English label such as `Class III`), `applicableLegislationId`, `nomenclatureCode` (EMDN, e.g. `Z12040192`) and `specialDeviceTypeId`. Use `eudamed_references` with the relevant CODE to obtain legislation and software-type IDs. These filters are documented in the official OpenAPI definition; live successful category queries could not be verified during the 2026-11-12 device-dataset incident. Class/category matches are candidates for further investigation, not proof of certificate ownership. Names match exactly; no substring or automatic legal-name normalization is provided.
+
+The client follows bounded upstream continuation links. `provenance.truncated` is true for either an output cap or incomplete paging; `locallyTruncated` identifies only the output cap. Results retain decoded labels alongside IDs, with CODE-specific joins and unresolved values preserved. Coverage and current certificate scope remain unverified.

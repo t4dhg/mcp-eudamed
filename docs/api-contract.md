@@ -16,7 +16,7 @@ Device validation requires at least one non-null identity field and validates kn
 
 ## Search semantics
 
-Text matching was observed as case-insensitive and potentially substring-based in the supplied API guide. Exact identifier queries were also observed to work. The integration does not depend on text queries being exact: `exact=true` applies normalized equality to every supplied filter locally. Actor discovery exposes exact legal and abbreviated name searches; verify candidate SRNs before portfolio queries.
+Trade-name and company-name matching is exact; do not depend on substring, wildcard or fuzzy matching. Exact identifier queries were observed to work. The integration does not depend on text queries being exact: `exact=true` applies normalized equality to every supplied filter locally. Actor discovery exposes exact legal and abbreviated name searches; verify candidate SRNs before portfolio queries.
 
 All device calls require a nonblank restrictive filter. There is no speculative `page` or `offset` parameter. The client follows validated nextLink values within EUDAMED_MAX_PAGES and reports whether continuation remains. `coverage=unknown` is retained even when a local limit did not truncate anything.
 
@@ -32,7 +32,7 @@ All upstream strings are untrusted data. Applications consuming the reusable cli
 
 ## Errors
 
-Library errors expose `code`, `status` where available, and `retryable`. Codes are `HTTP`, `NETWORK`, `TIMEOUT`, `SCHEMA`, `SIZE`, `JSON`, `CANCELLED` and `DEADLINE`. Input validation uses Zod errors. MCP errors redact upstream response bodies and arbitrary exception text.
+Library errors expose `code`, `status` where available, and `retryable`. Codes are `HTTP`, `NETWORK`, `TIMEOUT`, `SCHEMA`, `SIZE`, `JSON`, `CANCELLED` and `DEADLINE`. Input validation uses Zod errors. HTTP errors retain the query URL, status, observation time and an untrusted response-body excerpt capped at 4 KiB (or the configured response byte limit, if smaller), with explicit truncation and body-read-failure markers. A broken body stream preserves the received HTTP status and partial body; caller cancellation still takes precedence. Arbitrary exception text remains redacted. The manual device-portal link is guidance for a human, never an automated API fallback.
 
 The device tool retains valid device evidence if reference decoding fails, exposing `referenceError`. Investigation records per-step failures and returns `status=partial`; failed steps are null rather than fabricated empty successes.
 
@@ -43,3 +43,13 @@ The official OpenAPI definition and production 2.27.0 user guide were verified o
 Sources: [DG SANTE catalogue](https://developer.datalake.sante.service.ec.europa.eu/api-details#api=94b9e658-d721-4b58-8d96-022c490f7a17), [European Commission EUDAMED overview](https://health.ec.europa.eu/medical-devices-eudamed/overview_en).
 
 Investigation requests accept `deadlineMs` (default 60000, maximum 300000). Client methods accept a separate `{ signal }` request-options argument; the deadline spans queued work, active requests, retries and body reads. Investigation keeps partial evidence after cancellation or expiration. Discovery queries each supplied identity field separately in priority order: Primary DI, Basic UDI, trade name, device name, reference. It exposes conflicts and alternatives instead of silently combining contradictory filters. The ordinary device-search tool retains its explicit multi-filter AND behavior.
+
+## Category filters and availability
+
+The official OpenAPI definition was rechecked on 2026-11-12 and documents `/udi` filters `RISK_CLASS_ID`, `APPLICABLE_LEGISLATION_ID`, `NOMENCLATURE_CODE` and `SPECIAL_DEVICE_TYPE_ID`. `eudamed_devices` exposes these as `riskClass`, `applicableLegislationId`, `nomenclatureCode` and `specialDeviceTypeId`. Numeric IDs pass through; English risk labels resolve through `RISK_CLASS_ID` reference rows, with the reference provenance retained. Unknown or ambiguous labels fail before device I/O. The investigation tool retains identity-based inputs; use device search for category discovery first.
+
+Live verification on that date returned HTTP 404 `Data not found` for a previously retrieved device control and a class/EMDN query, while its actor and reference queries succeeded. Filter support is documented; successful live category retrieval could not be verified during this incident.
+
+`eudamed_status` bypasses caches and independently checks the historical public DERM Basic UDI `506071773DERM-DX-CEMDRXU` and manufacturer `GB-MF-000017972` (last known good 2026-11-09). It reports `probable-device-dataset-outage` only for a device 404 `Data not found` alongside a matching actor control; `available` requires both matching controls, otherwise `inconclusive`. A control can change: this is diagnostic evidence, not definitive outage detection. Custom base URLs use these same controls and may therefore yield inconclusive results. Investigations automatically run this bounded check when every attempted device query returns 404, within the existing deadline and cancellation scope.
+
+`provenance.truncated` now covers both local output and incomplete pagination. `locallyTruncated` preserves the separate output-cap signal. Successful empty responses remain distinct from HTTP failures. Device results already include raw IDs and dynamically decoded labels; equal numeric IDs in different CODE categories never share a label.

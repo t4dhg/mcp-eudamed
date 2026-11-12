@@ -66,7 +66,7 @@ try {
     `${JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' })}\n`,
   );
   const listed = await request('tools/list');
-  assert.equal(listed.result?.tools.length, 5);
+  assert.equal(listed.result?.tools.length, 6);
   const invalid = await request('tools/call', {
     name: 'eudamed_devices',
     arguments: { manufacturerSrn: 'Example Company' },

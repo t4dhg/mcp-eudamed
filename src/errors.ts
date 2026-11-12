@@ -1,3 +1,11 @@
+export const devicePortalUrl = 'https://ec.europa.eu/tools/eudamed/#/screen/search-device';
+export interface HttpDetails {
+  sourceUrl: string;
+  retrievedAt: string;
+  responseBody: string;
+  bodyTruncated: boolean;
+  bodyReadFailed: boolean;
+}
 export class EudamedError extends Error {
   constructor(
     public readonly code:
@@ -5,6 +13,7 @@ export class EudamedError extends Error {
     message: string,
     public readonly status?: number,
     public readonly retryable = false,
+    public readonly details?: HttpDetails,
   ) {
     super(message);
     this.name = 'EudamedError';

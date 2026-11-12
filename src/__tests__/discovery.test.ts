@@ -117,7 +117,7 @@ it('retains partial discovery evidence when one name route fails', async () => {
   expect(result.status).toBe('partial');
   expect(result.candidates).toHaveLength(1);
   expect(result.failures).toEqual([
-    { field: 'ABBREVIATED_NAME', error: 'EUDAMED returned HTTP 503' },
+    { field: 'ABBREVIATED_NAME', error: expect.stringContaining('EUDAMED returned HTTP 503') },
   ]);
 });
 it('preserves ambiguous entities and marks candidate limits', async () => {

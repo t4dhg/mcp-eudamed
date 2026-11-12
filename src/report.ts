@@ -1,6 +1,7 @@
 import type { normalizeDevice } from './evidence.js';
 import type { Provenance } from './client.js';
 interface ReportInput {
+  datasetHealth?: { status: string; interpretation: string; manualSearchUrl: string } | null;
   status: string;
   identityStatus: string;
   targetEvidence: (ReturnType<typeof normalizeDevice> & { source: Provenance })[];
@@ -30,6 +31,11 @@ export function renderReport(data: ReportInput): string {
     `Identity: ${data.identityStatus}. Upstream coverage: unknown.`,
     '',
   ];
+  if (data.datasetHealth)
+    lines.push(
+      `Dataset health: ${data.datasetHealth.status}. ${data.datasetHealth.interpretation}`,
+      `Manual device search: ${data.datasetHealth.manualSearchUrl}`,
+    );
   if (!data.targetEvidence.length)
     lines.push(
       'No target identity established. Portfolio records must not be attributed to the requested device.',

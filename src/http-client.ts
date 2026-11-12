@@ -7,7 +7,7 @@ import {
 } from './cancellation.js';
 import { z } from 'zod';
 import type { Config } from './config.js';
-import { EudamedError } from './errors.js';
+import { EudamedError, devicePortalUrl } from './errors.js';
 export interface Dependencies {
   fetch?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
@@ -64,7 +64,7 @@ export class HttpClient {
     const operation = this.tail.then(async () => {
       checkSignal(options.signal);
       const cached = this.cache.get(key);
-      if (cached && cached.expires > this.now())
+      if (!options.bypassCache && cached && cached.expires > this.now())
         return {
           records: structuredClone(cached.records) as T[],
           sourceUrl: key,
@@ -159,12 +159,43 @@ export class HttpClient {
             retryDelay = /^\d+(\.\d+)?$/.test(retryAfter)
               ? Number(retryAfter) * 1000
               : Math.max(0, Date.parse(retryAfter) - this.now());
-          await response.body?.cancel();
+          const reader = response.body?.getReader();
+          const chunks: Uint8Array[] = [];
+          let size = 0;
+          let bodyTruncated = false;
+          let bodyReadFailed = false;
+          const cap = Math.min(4096, this.config.maxResponseBytes);
+          try {
+            if (reader) {
+              while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                chunks.push(value.subarray(0, Math.max(0, cap - size)));
+                size += value.byteLength;
+                if (size > cap) {
+                  bodyTruncated = true;
+                  await reader.cancel();
+                  break;
+                }
+              }
+            }
+          } catch {
+            checkSignal(signal);
+            bodyReadFailed = true;
+          }
+          const details = {
+            sourceUrl: url,
+            retrievedAt: new Date(this.now()).toISOString(),
+            responseBody: Buffer.concat(chunks).toString('utf8'),
+            bodyTruncated,
+            bodyReadFailed,
+          };
           throw new EudamedError(
             'HTTP',
-            `EUDAMED returned HTTP ${response.status}`,
+            `EUDAMED returned HTTP ${response.status}; URL: ${url}; retrievedAt: ${details.retrievedAt}; upstream response body (untrusted): ${JSON.stringify(details.responseBody)}${bodyTruncated ? ' [truncated]' : ''}${bodyReadFailed ? ' [body read failed; incomplete]' : ''}. This is a failed request, not an empty search. Use eudamed_status to check dataset availability. Manual device search: ${devicePortalUrl}`,
             response.status,
             retryable,
+            details,
           );
         }
         if (Number(response.headers.get('content-length')) > this.config.maxResponseBytes) {

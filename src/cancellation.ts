@@ -1,6 +1,7 @@
 import { EudamedError } from './errors.js';
 export interface RequestOptions {
   signal?: AbortSignal;
+  bypassCache?: boolean;
 }
 export function cancellationError(signal: AbortSignal): EudamedError {
   return signal.reason instanceof EudamedError

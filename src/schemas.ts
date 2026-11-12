@@ -7,22 +7,45 @@ export const searchShape = {
       'Expected manufacturer SRN such as US-MF-000000001; use eudamed_discover_actors for company names.',
     )
     .optional(),
-  tradeName: text.optional(),
+  tradeName: text.describe('Exact trade name, not substring or fuzzy matching.').optional(),
   deviceName: text.optional(),
   basicUdi: text.optional(),
   primaryDi: text.optional(),
   reference: text.optional(),
 };
 export const searchKeys = Object.keys(searchShape) as (keyof typeof searchShape)[];
+export const deviceSearchShape = {
+  ...searchShape,
+  riskClass: z
+    .union([z.number().int(), text])
+    .optional()
+    .describe(
+      'RISK_CLASS_ID number or exact English label, e.g. Class III; resolved by CODE + ID.',
+    ),
+  applicableLegislationId: z
+    .number()
+    .int()
+    .optional()
+    .describe('APPLICABLE_LEGISLATION_ID; use eudamed_references for IDs.'),
+  nomenclatureCode: text.optional().describe('Exact EMDN NOMENCLATURE_CODE, e.g. Z12040192.'),
+  specialDeviceTypeId: z
+    .number()
+    .int()
+    .optional()
+    .describe('SPECIAL_DEVICE_TYPE_ID; look up the software ID with eudamed_references.'),
+};
+export const deviceSearchKeys = Object.keys(
+  deviceSearchShape,
+) as (keyof typeof deviceSearchShape)[];
 export const searchSchema = z
   .object({
-    ...searchShape,
+    ...deviceSearchShape,
     exact: z.boolean().default(false),
     limit: z.number().int().min(1).max(100).default(20),
   })
   .strict()
   .refine(
-    (v) => searchKeys.some((k) => v[k]),
+    (v) => deviceSearchKeys.some((k) => v[k] !== undefined),
     'At least one restrictive device filter is required',
   );
 export type DeviceSearch = z.input<typeof searchSchema>;

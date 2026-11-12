@@ -1,3 +1,5 @@
+import { checkStatus } from './status.js';
+import { EudamedError } from './errors.js';
 import { parseDeviceIdentifier, emptySearchSteps } from './identifiers.js';
 import { discoverActors } from './discovery.js';
 import type { RequestOptions } from './cancellation.js';
@@ -12,7 +14,7 @@ import {
   referenceInputSchema,
   referenceSchema,
   searchSchema,
-  searchKeys,
+  deviceSearchKeys,
   type DeviceSearch,
 } from './schemas.js';
 export const parameterNames = {
@@ -22,6 +24,10 @@ export const parameterNames = {
   basicUdi: 'BASIC_UDI',
   primaryDi: 'PRIMARY_DI',
   reference: 'REFERENCE',
+  riskClass: 'RISK_CLASS_ID',
+  applicableLegislationId: 'APPLICABLE_LEGISLATION_ID',
+  nomenclatureCode: 'NOMENCLATURE_CODE',
+  specialDeviceTypeId: 'SPECIAL_DEVICE_TYPE_ID',
 } as const;
 export function normalized(value: unknown) {
   return typeof value === 'string' ? value.trim().toLowerCase() : '';
@@ -35,6 +41,7 @@ export interface Provenance {
   matched: number;
   returned: number;
   truncated: boolean;
+  locallyTruncated: boolean;
   coverage: 'unknown';
   pagination: Pagination;
   warnings: string[];
@@ -62,7 +69,8 @@ export class EudamedClient {
         returnedByApi: observation.records.length,
         matched: matches.length,
         returned: Math.min(matches.length, limit),
-        truncated: matches.length > limit,
+        truncated: matches.length > limit || !observation.pagination.complete,
+        locallyTruncated: matches.length > limit,
         coverage: 'unknown',
         pagination: observation.pagination,
         warnings: [
@@ -81,22 +89,58 @@ export class EudamedClient {
     const search = searchSchema.parse(input);
     const identifier = search.primaryDi ? parseDeviceIdentifier(search.primaryDi) : null;
     if (identifier) search.primaryDi = identifier.primaryDi;
+    let filterReferenceProvenance: Provenance | null = null;
+    if (typeof search.riskClass === 'string') {
+      if (/^-?\d+$/.test(search.riskClass))
+        search.riskClass = z.number().int().parse(Number(search.riskClass));
+      else {
+        const references = await this.referenceData('en', options);
+        filterReferenceProvenance = references.provenance;
+        if (references.provenance.truncated)
+          throw new EudamedError(
+            'SCHEMA',
+            'Risk class reference data is incomplete; supply a verified numeric ID.',
+          );
+        const ids = new Set(
+          references.records
+            .filter(
+              (r) =>
+                r.CODE === 'RISK_CLASS_ID' && normalized(r.VALUE) === normalized(search.riskClass),
+            )
+            .map((r) => r.ID),
+        );
+        if (ids.size !== 1)
+          throw new EudamedError(
+            'SCHEMA',
+            'Unknown or ambiguous risk class label; use eudamed_references with CODE=RISK_CLASS_ID and supply a numeric ID.',
+          );
+        search.riskClass = [...ids][0];
+      }
+    }
     const query: Record<string, string> = {};
-    for (const key of searchKeys) if (search[key]) query[parameterNames[key]] = search[key]!;
+    for (const key of deviceSearchKeys)
+      if (search[key] !== undefined) query[parameterNames[key]] = String(search[key]);
     const result = await this.http.get('udi', query, deviceSchema, options);
     const matches = search.exact
       ? result.records.filter((row) =>
-          searchKeys.every(
+          deviceSearchKeys.every(
             (key) =>
-              !search[key] || normalized(row[parameterNames[key]]) === normalized(search[key]),
+              search[key] === undefined ||
+              (typeof search[key] === 'number'
+                ? row[parameterNames[key]] === search[key]
+                : normalized(row[parameterNames[key]]) === normalized(search[key])),
           ),
         )
       : result.records;
     return {
       ...this.result(result, matches, search.limit),
       identifier,
+      filterReferenceProvenance,
       nextSteps: matches.length ? [] : emptySearchSteps,
     };
+  }
+  async status(options: RequestOptions = {}) {
+    return checkStatus(this, options);
   }
   async discoverActors(input: z.input<typeof discoverySchema>, options: RequestOptions = {}) {
     return discoverActors(this, input, options);

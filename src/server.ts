@@ -4,7 +4,13 @@ import { EudamedClient } from './client.js';
 import { normalizeDevice } from './evidence.js';
 import { EudamedError, errorMessage } from './errors.js';
 import { investigate } from './investigation.js';
-import { actorSchema, discoverySchema, referenceInputSchema, searchShape } from './schemas.js';
+import {
+  actorSchema,
+  discoverySchema,
+  referenceInputSchema,
+  searchShape,
+  deviceSearchShape,
+} from './schemas.js';
 import { evidenceGuide, searchGuide, workflows } from './guides.js';
 import { VERSION } from './version.js';
 export function createServer(api = new EudamedClient()) {
@@ -41,9 +47,9 @@ export function createServer(api = new EudamedClient()) {
     {
       title: 'Search EUDAMED devices',
       description:
-        'Search public UDI records by at least one restrictive filter. Upstream name matching is not guaranteed to be partial; exact=true additionally matches every supplied filter locally. Returns normalized evidence and source provenance; raw=true adds original device fields. No exhaustive-coverage or conformity guarantee.',
+        'Search public UDI records by at least one restrictive filter. Trade-name matching is exact, not substring or fuzzy matching. Supports riskClass (ID or English label), applicableLegislationId, nomenclatureCode (EMDN) and specialDeviceTypeId. Follows bounded nextLink paging; truncated includes page and output caps. Class/category searches find candidates, not verified certificate holders; exact=true additionally matches every supplied filter locally. Returns normalized evidence and source provenance; raw=true adds original device fields. No exhaustive-coverage or conformity guarantee.',
       inputSchema: {
-        ...searchShape,
+        ...deviceSearchShape,
         exact: z
           .boolean()
           .default(false)
@@ -84,6 +90,17 @@ export function createServer(api = new EudamedClient()) {
           referenceError,
         };
       }),
+  );
+  server.registerTool(
+    'eudamed_status',
+    {
+      title: 'Check EUDAMED dataset availability',
+      description:
+        'Uncached read-only probes of a historical known device and its actor. Reports probable device dataset outage when the device returns 404 Data not found while the actor succeeds; otherwise available or inconclusive. Preserves query evidence and a manual portal link. Not a registry completeness or certificate check.',
+      inputSchema: {},
+      annotations,
+    },
+    (_args, extra) => output(async () => ({ ...(await api.status({ signal: extra.signal })) })),
   );
   server.registerTool(
     'eudamed_actors',

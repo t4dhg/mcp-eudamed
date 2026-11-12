@@ -61,13 +61,19 @@ async function runInvestigation(
   options: ReturnType<typeof investigationSchema.parse>,
   signal: AbortSignal,
 ) {
+  const deviceOutcomes: boolean[] = [];
   const failures: { step: string; error: string }[] = [];
   async function attempt<T>(step: string, run: () => Promise<T>): Promise<T | null> {
     if (signal.aborted) return null;
     try {
       checkSignal(signal);
-      return await run();
+      const result = await run();
+      if (step.startsWith('device-search:') || step.startsWith('manufacturer-devices:'))
+        deviceOutcomes.push(false);
+      return result;
     } catch (error) {
+      if (step.startsWith('device-search:') || step.startsWith('manufacturer-devices:'))
+        deviceOutcomes.push(error instanceof EudamedError && error.status === 404);
       failures.push({ step, error: errorMessage(error) });
       return null;
     }
@@ -150,6 +156,10 @@ async function runInvestigation(
       actor: await attempt(`representative:${srn}`, () => client.actors({ actorId: srn }, request)),
     });
   }
+  const datasetHealth =
+    deviceOutcomes.length && deviceOutcomes.every(Boolean)
+      ? await attempt('dataset-health', () => client.status(request))
+      : null;
   const references = await attempt('references', () =>
     client.referenceData(options.language, request),
   );
@@ -202,6 +212,7 @@ async function runInvestigation(
   const result = {
     status,
     identityStatus,
+    datasetHealth,
     scope: options,
     searches,
     candidates,
@@ -226,7 +237,7 @@ async function runInvestigation(
       omittedEvidenceRecords: Math.max(0, portfolioRecords.size - selectedPortfolio.length),
       omittedAlternativeCandidates: Math.max(0, alternatives.size - options.maxDevices),
       locallyTruncatedQueries: [...searches.map((s) => s.result), ...portfolios]
-        .filter((r): r is Result<Device> => r != null && r.provenance.truncated)
+        .filter((r): r is Result<Device> => r != null && r.provenance.locallyTruncated)
         .map((r) => r.provenance.sourceUrl),
       incompletePaginationQueries: [
         ...searches.map((s) => s.result?.provenance),
